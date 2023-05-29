@@ -3,45 +3,61 @@
 
 #include "ExProgramInputWidget.h"
 #include "Components/Button.h"
+#include "Components/MultiLineEditableText.h"
 #include "Widgets/Text/SMultiLineEditableText.h"
 #include "ExCoreTypes.h"
 #include "Executors/Executor.h"
+#include "ExGameModeBase.h"
+
+
+DEFINE_LOG_CATEGORY_STATIC(ProgramInputLog, All, All);
 
 void UExProgramInputWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	CompileButton->OnClicked.AddDynamic(this, &UExProgramInputWidget::CompileProgram);
+	CompileButton->OnClicked.AddUniqueDynamic(this, &UExProgramInputWidget::CompileProgram);
 }
 
 void UExProgramInputWidget::CompileProgram()
 {
+	UE_LOG(ProgramInputLog, Error, TEXT("Starting compile program"));
 	TArray<FCommand> CompiledProgram;
-	CompiledProgram.Empty();
+	UE_LOG(ProgramInputLog, Error, TEXT("Length of the program = %i"), ProgramInputField->GetText().ToString().Len());
 	FString Program = ProgramInputField->GetText().ToString();
 	TArray<FString> CommandsArray;
-	TUniquePtr<TCHAR[]> DelimsArray(new TCHAR[2]);
+	/*TUniquePtr<TCHAR[]> DelimsArray(new TCHAR[2]);
 	DelimsArray[0] = TCHAR(' ');
-	DelimsArray[1] = TCHAR(',');
+	DelimsArray[1] = TCHAR(',');*/
+	const TCHAR* DelimsArray[] = { TEXT(" "), TEXT(","), TEXT("\n"), TEXT("\r"), TEXT("\b"), TEXT("\t") };
 	if (!Program.IsEmpty())
 	{
-		int32 CommandsNum = Program.ParseIntoArray(CommandsArray, DelimsArray.Get(), true);
+		int32 CommandsNum = Program.ParseIntoArray(CommandsArray, DelimsArray, true);
 		if (CommandsNum > 1)
 		{
 			int32 i = 0;
 			while (i < CommandsArray.Num())
 			{
+				UE_LOG(ProgramInputLog, Error, TEXT("Starting work under program text"));
 				FString CurrentOperator = CommandsArray[i].ToLower();
 				int32 CurrentParametr = FCString::Atoi(*CommandsArray[i + 1]);
 				FCommand CurrentCommand(CurrentOperator, CurrentParametr);
 				CompiledProgram.Add(CurrentCommand);
+				i += 2;
 			}
 		}
-		//закомменченоЮ пока не создам класс Исполнитля
+		UE_LOG(ProgramInputLog, Error, TEXT("Program has been compiled"));
+		//закомменчено, пока не создам класс Исполнитля
 		UPROPERTY()
 			AExecutor* Executor = FindExecutor();
+		if (GetWorld())
+		{
+			const auto GameMode = Cast<AExGameModeBase>(GetWorld()->GetAuthGameMode());
+			GameMode->SetGameStatus(EExGameStatus::GameInProgress);
+		}
 		if (Executor)
 			Executor->ExecuteProgram(CompiledProgram);
+		
 	}
 }
 
@@ -57,6 +73,7 @@ AExecutor* UExProgramInputWidget::FindExecutor()
 		if (Pawn->IsPlayerControlled())
 		{
 			Executor = Cast<AExecutor>(Pawn);
+			UE_LOG(ProgramInputLog, Error, TEXT("Executor has been finded"));
 			break;
 		}
 	}

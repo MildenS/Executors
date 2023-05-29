@@ -8,7 +8,7 @@
 
 class AExecutor;
 class UButton;
-class SMultiLineEditableText;
+class UMultiLineEditableText;
 struct FCommand;
 
 
@@ -24,9 +24,12 @@ public:
 
 
 protected:
+	UPROPERTY(meta = (BindWidget))
 	UButton* CompileButton;
-	SMultiLineEditableText* ProgramInputField;
+	UPROPERTY(meta = (BindWidget))
+	UMultiLineEditableText* ProgramInputField;
 	virtual void NativeConstruct() override;
+	UFUNCTION()
 	void CompileProgram();
 
 private:

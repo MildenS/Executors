@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "ExCoreTypes.h"
 #include "ExGameModeBase.generated.h"
 
 /**
@@ -14,6 +15,15 @@ class EXECUTORS_API AExGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 
-		AExGameModeBase();
+public:
+
+	AExGameModeBase();
+	FOnGameStatusChangedSignature OnGameStatusChanged;
+	virtual void StartPlay() override;
+	void SetGameStatus(EExGameStatus GameStatus);
+
+private:
+	EExGameStatus CurrentGameStatus = EExGameStatus::GameInProgress;
+
 	
 };

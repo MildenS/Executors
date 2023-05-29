@@ -23,3 +23,14 @@ struct FCommand
 	FString& GetOperator()  { return Operation; }
 	int32 GetParametr()  { return Parametr; }
 };
+
+
+UENUM()
+enum class EExGameStatus : uint8
+{
+	GameInProgress = 0,
+	ProgramInput,
+	Compile
+};
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStatusChangedSignature, EExGameStatus);

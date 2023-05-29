@@ -55,7 +55,9 @@ void AGrasshopper::Tick(float DeltaTime)
 void AGrasshopper::Move(int Distance)
 {
 	Super::Move(Distance);
-
+	FVector NewLocation = GetActorLocation();
+	NewLocation.X += Distance;
+	SetActorLocation(NewLocation);
 }
 
 void AGrasshopper::FillCorrectOperations()
