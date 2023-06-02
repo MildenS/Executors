@@ -23,7 +23,7 @@ void UExProgramInputWidget::CompileProgram()
 {
 	UE_LOG(ProgramInputLog, Error, TEXT("Starting compile program"));
 	TArray<FCommand> CompiledProgram;
-	UE_LOG(ProgramInputLog, Error, TEXT("Length of the program = %i"), ProgramInputField->GetText().ToString().Len());
+	//UE_LOG(ProgramInputLog, Error, TEXT("Length of the program = %i"), ProgramInputField->GetText().ToString().Len());
 	FString Program = ProgramInputField->GetText().ToString();
 	TArray<FString> CommandsArray;
 	/*TUniquePtr<TCHAR[]> DelimsArray(new TCHAR[2]);
@@ -32,8 +32,12 @@ void UExProgramInputWidget::CompileProgram()
 	const TCHAR* DelimsArray[] = { TEXT(" "), TEXT(","), TEXT("\n"), TEXT("\r"), TEXT("\b"), TEXT("\t") };
 	if (!Program.IsEmpty())
 	{
-		int32 CommandsNum = Program.ParseIntoArray(CommandsArray, DelimsArray, true);
-		if (CommandsNum > 1)
+		int32 CommandsNum = Program.ParseIntoArray(CommandsArray, DelimsArray, 6,  true);
+		for (int32 i = 0; i < CommandsArray.Num(); i += 2)
+		{
+			UE_LOG(ProgramInputLog, Error, TEXT("Command №%i   %s, %s"), i+1, *CommandsArray[i], *CommandsArray[i+1]);
+		}
+		if (CommandsArray.Num()>1)
 		{
 			int32 i = 0;
 			while (i < CommandsArray.Num())
@@ -47,6 +51,7 @@ void UExProgramInputWidget::CompileProgram()
 			}
 		}
 		UE_LOG(ProgramInputLog, Error, TEXT("Program has been compiled"));
+		UE_LOG(ProgramInputLog, Error, TEXT("Number of Commands = %i"), CompiledProgram.Num());
 		//закомменчено, пока не создам класс Исполнитля
 		UPROPERTY()
 			AExecutor* Executor = FindExecutor();

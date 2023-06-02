@@ -26,17 +26,23 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* Camera;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Mesh;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	USphereComponent* SphereCollision;
 
 	UPROPERTY(EditAnywhere, Category = "Movement Parametrs")
-		int32 StepDistance = 50;
+		int32 StepDistance = 5;
 
-	virtual void Move(int Distance) override;
+	UPROPERTY(EditAnywhere, Category = "Movement Parametrs")
+		int32 JumpHeight = 10;
+
+	UPROPERTY(EditAnywhere, Category = "Movement Parametrs")
+		int32 MovesInOneStep = 5; //Количество мини-шагов по перемещению на 1
+
+	virtual void Move() override;
 
 
 public:
@@ -48,8 +54,18 @@ public:
 
 
 private:
+
+	
+
 	UPROPERTY()
 	TSet<FString> CorrectOperations;
 	void FillCorrectOperations();
+	void DelayFunction();
 
+	FMovingData CurrentMovingData;
+	bool IsMoving;
+
+	/*float StepX = 0;
+	float StepY = 0;*/
+	//bool UpFlag;
 };

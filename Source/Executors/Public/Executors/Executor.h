@@ -24,7 +24,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	virtual void Move(int Distance) {};
+	virtual void Move() {};
 
 public:	
 	// Called every frame
