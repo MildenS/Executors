@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include"ExGameModeBase.h"
 #include "ExCoreTypes.h"
 
 DEFINE_LOG_CATEGORY_STATIC(GrasshopperLog, All, All);
@@ -25,7 +26,7 @@ AGrasshopper::AGrasshopper()
 	Camera->SetupAttachment(RootComponent);
 
 	FillCorrectOperations();
-	IsMoving = false;
+
 }
 
 void AGrasshopper::ExecuteProgram(const TArray<FCommand>& CompiledProgram)
@@ -92,6 +93,7 @@ void AGrasshopper::Move()
 	//IsMoving = true;
 	if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].CommandType == ECommandType::Movement)
 	{
+		CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].IsCounted = false;
 		int32 Distance = CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetParametr();
 		if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetOperator() == TEXT("forward"))
 		{
@@ -133,11 +135,27 @@ void AGrasshopper::Move()
 				if (CurrentMovingData.Direction > 0 && CurrentMovingData.X > CurrentMovingData.CurrentEndPosition.X
 					|| CurrentMovingData.Direction < 0 && CurrentMovingData.X < CurrentMovingData.CurrentEndPosition.X)
 				{
+					if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num())
+					{
+						CurrentExecutorPosition += CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetParametr();
+						UE_LOG(GrasshopperLog, Warning, TEXT("Grasshopper position: %i"), CurrentExecutorPosition);
+						CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].IsCounted = true;
+					}					
 					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 					CurrentMovingData.CurrentCommandIndex += 1;
 					//IsMoving = false;
 					if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num())
 						Move();
+					if (CurrentMovingData.CurrentCommandIndex >= CurrentMovingData.CurrentComandsArray.Num())
+					{
+						if (GetWorld())
+						{
+							auto GameMode = Cast<AExGameModeBase>(GetWorld()->GetAuthGameMode());
+							//UE_LOG(GrasshopperLog, Warning, TEXT("Finally Grasshopper position:  %i"), CurrentExecutorPosition);
+							GameMode->SetCurrentExecutorPosition(CurrentExecutorPosition);
+							GameMode->SetGameStatus(EExGameStatus::EndOfLevel);	
+						}
+					}
 					return;
 				}
 				// Интерполируем значения по оси X и вычисляем соответствующие значения по оси Y
@@ -156,6 +174,7 @@ void AGrasshopper::Move()
 	{
 		FCommand CurrentLoopCommand = 
 		CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator];
+		CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator].IsCounted=false;
 		UE_LOG(GrasshopperLog, Warning, TEXT("Loop command:  %s   %i"), *CurrentLoopCommand.GetOperator(), CurrentLoopCommand.GetParametr());
 		int32 Distance = CurrentLoopCommand.GetParametr();
 		if (CurrentLoopCommand.GetOperator() == TEXT("forward"))
@@ -187,7 +206,7 @@ void AGrasshopper::Move()
 		CurrentMovingData.B = ((y1 - y0) - CurrentMovingData.A * (x1 * x1 - x0 * x0)) / (x1 - x0);
 		CurrentMovingData.C = y0 - CurrentMovingData.A * x0 * x0 - CurrentMovingData.B * x0;
 
-		UE_LOG(GrasshopperLog, Error, TEXT("A = %f   B = %f     C = %f"), CurrentMovingData.A, CurrentMovingData.B, CurrentMovingData.C);
+		//UE_LOG(GrasshopperLog, Error, TEXT("A = %f   B = %f     C = %f"), CurrentMovingData.A, CurrentMovingData.B, CurrentMovingData.C);
 
 		FTimerHandle TimerHandle;
 		FTimerDelegate TimerDelegate;
@@ -198,8 +217,27 @@ void AGrasshopper::Move()
 				if (CurrentMovingData.Direction > 0 && CurrentMovingData.X > CurrentMovingData.CurrentEndPosition.X
 					|| CurrentMovingData.Direction < 0 && CurrentMovingData.X < CurrentMovingData.CurrentEndPosition.X)
 				{
+					if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num()
+						&& CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator < CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands.Num()
+						&& CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopIterator < CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopIterationsNum)
+					{
+						CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator].IsCounted = true;
+						CurrentExecutorPosition += CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator].GetParametr();
+					}
+					if (CurrentMovingData.CurrentCommandIndex >= CurrentMovingData.CurrentComandsArray.Num())
+					{
+						if (GetWorld())
+						{
+							auto GameMode = Cast<AExGameModeBase>(GetWorld()->GetAuthGameMode());
+							GameMode->SetCurrentExecutorPosition(CurrentExecutorPosition);
+							GameMode->SetGameStatus(EExGameStatus::EndOfLevel);
+						}
+						return;
+					}
+					
 					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 					//переход на следующую команду цикла
+
 					CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator += 1;
 					//если дошёл до конца одной итерации цикла, то перехожу на следующую
 					if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator < CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands.Num())
@@ -216,13 +254,19 @@ void AGrasshopper::Move()
 							Move();
 						}
 						else
+						{
+							CurrentMovingData.CurrentCommandIndex += 1;
+							if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num())
+								Move();				
 							return;
+						}
+							
 					}
 				}
 				// Интерполируем значения по оси X и вычисляем соответствующие значения по оси Y
 				float Y = CurrentMovingData.A * FMath::Square(CurrentMovingData.X) + CurrentMovingData.B * CurrentMovingData.X + CurrentMovingData.C;
 				FVector NewPosition = FVector(CurrentMovingData.X, Y, CurrentMovingData.CurrentStartPosition.Z);
-				UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
+				//UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
 				CurrentMovingData.X += 1.f * CurrentMovingData.Direction;
 				// Обновляем позицию меша
 				SetActorLocation(NewPosition);

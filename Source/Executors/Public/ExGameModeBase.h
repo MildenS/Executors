@@ -21,9 +21,15 @@ public:
 	FOnGameStatusChangedSignature OnGameStatusChanged;
 	virtual void StartPlay() override;
 	void SetGameStatus(EExGameStatus GameStatus);
+	int32 GetStartPosition() { return StartPosition; }
+	void SetCurrentExecutorPosition(int32 pos) { CurrentExecutorPosition = pos; }
 
 private:
 	EExGameStatus CurrentGameStatus = EExGameStatus::GameInProgress;
-
-	
+	void CheckCompleteLevel();
+	UPROPERTY(EditAnywhere)
+		int32 EndPosition=10;
+	UPROPERTY(EditAnywhere)
+		int32 StartPosition = 0;
+	int32 CurrentExecutorPosition; //Позиция, на которой остановился Исполнитель (в системе координат Исполнителя)
 };

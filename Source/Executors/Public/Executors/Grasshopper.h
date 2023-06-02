@@ -63,7 +63,7 @@ private:
 	void DelayFunction();
 
 	FMovingData CurrentMovingData;
-	bool IsMoving;
+	int32 CurrentExecutorPosition = 0; //Текущая позиция в системе координат Исполнителя
 
 	/*float StepX = 0;
 	float StepY = 0;*/

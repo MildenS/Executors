@@ -19,6 +19,7 @@ void UExProgramInputWidget::NativeConstruct()
 	CompileButton->OnClicked.AddUniqueDynamic(this, &UExProgramInputWidget::CompileProgram);
 }
 
+//Метод считывания и обработки программы из виджета и передача его Исполнителю
 void UExProgramInputWidget::CompileProgram()
 {
 	UE_LOG(ProgramInputLog, Error, TEXT("Starting compile program"));
@@ -72,6 +73,10 @@ void UExProgramInputWidget::CompileProgram()
 					}
 						
 				}
+				else
+				{
+					i += 2;
+				}
 			}
 		}
 		for (int32 i = 0; i < CompiledProgram.Num(); i++)
@@ -93,7 +98,7 @@ void UExProgramInputWidget::CompileProgram()
 	}
 }
 
-//закомменчено, пока не создам класс исполнителя
+//Метод поиска Исполнителя
 AExecutor* UExProgramInputWidget::FindExecutor()
 {
 	UPROPERTY()

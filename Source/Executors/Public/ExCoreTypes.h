@@ -29,7 +29,8 @@ struct FCommand
 	int32 LoopIterationsNum;
 	int32 LoopIterator; //итератор для цикла (чтобы проходить по итерациям цикла
 	int32 LoopCommandsIterator; //итератор для прохода по командам внутри одной итерации цикла
-
+	bool IsCounted; //считалась ли команда при учёте передвижения Исполнителя в его системе координат 
+	// (необходимо для верного учёта позиции Исполнителя при завершении уровня
 	FCommand(FString _op, int32 _param) : Operation(_op), Parametr(_param) {}
 	FCommand() {}
 
@@ -43,7 +44,10 @@ enum class EExGameStatus : uint8
 {
 	GameInProgress = 0,
 	ProgramInput,
-	Compile
+	Compile,
+	EndOfLevel,
+	LevelComplete,
+	LevelFailed
 };
 
 
