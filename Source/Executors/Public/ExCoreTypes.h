@@ -7,6 +7,14 @@
  * 
  */
 
+
+UENUM()
+enum class ECommandType : uint8
+{
+	Movement = 0,
+	Loop
+};
+
 USTRUCT(BlueprintType)
 struct FCommand
 {
@@ -16,6 +24,11 @@ struct FCommand
 		FString Operation;
 	UPROPERTY()
 		int32 Parametr;
+	ECommandType CommandType;
+	TArray<FCommand> LoopCommands;
+	int32 LoopIterationsNum;
+	int32 LoopIterator; //итератор для цикла (чтобы проходить по итерациям цикла
+	int32 LoopCommandsIterator; //итератор для прохода по командам внутри одной итерации цикла
 
 	FCommand(FString _op, int32 _param) : Operation(_op), Parametr(_param) {}
 	FCommand() {}
@@ -32,6 +45,9 @@ enum class EExGameStatus : uint8
 	ProgramInput,
 	Compile
 };
+
+
+
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStatusChangedSignature, EExGameStatus);
 

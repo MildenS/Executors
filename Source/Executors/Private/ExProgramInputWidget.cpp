@@ -23,20 +23,12 @@ void UExProgramInputWidget::CompileProgram()
 {
 	UE_LOG(ProgramInputLog, Error, TEXT("Starting compile program"));
 	TArray<FCommand> CompiledProgram;
-	//UE_LOG(ProgramInputLog, Error, TEXT("Length of the program = %i"), ProgramInputField->GetText().ToString().Len());
 	FString Program = ProgramInputField->GetText().ToString();
 	TArray<FString> CommandsArray;
-	/*TUniquePtr<TCHAR[]> DelimsArray(new TCHAR[2]);
-	DelimsArray[0] = TCHAR(' ');
-	DelimsArray[1] = TCHAR(',');*/
 	const TCHAR* DelimsArray[] = { TEXT(" "), TEXT(","), TEXT("\n"), TEXT("\r"), TEXT("\b"), TEXT("\t") };
 	if (!Program.IsEmpty())
 	{
 		int32 CommandsNum = Program.ParseIntoArray(CommandsArray, DelimsArray, 6,  true);
-		for (int32 i = 0; i < CommandsArray.Num(); i += 2)
-		{
-			UE_LOG(ProgramInputLog, Error, TEXT("Command №%i   %s, %s"), i+1, *CommandsArray[i], *CommandsArray[i+1]);
-		}
 		if (CommandsArray.Num()>1)
 		{
 			int32 i = 0;
@@ -44,15 +36,50 @@ void UExProgramInputWidget::CompileProgram()
 			{
 				UE_LOG(ProgramInputLog, Error, TEXT("Starting work under program text"));
 				FString CurrentOperator = CommandsArray[i].ToLower();
-				int32 CurrentParametr = FCString::Atoi(*CommandsArray[i + 1]);
-				FCommand CurrentCommand(CurrentOperator, CurrentParametr);
-				CompiledProgram.Add(CurrentCommand);
-				i += 2;
+				if (CurrentOperator == "forward" || CurrentOperator == "back")
+				{
+					int32 CurrentParametr = FCString::Atoi(*CommandsArray[i + 1]);
+					FCommand CurrentCommand(CurrentOperator, CurrentParametr);
+					CurrentCommand.CommandType = ECommandType::Movement;
+					CompiledProgram.Add(CurrentCommand);
+					i += 2;
+				}
+				else if (CurrentOperator == "repeat")
+				{
+					int32 CurrentParametr = FCString::Atoi(*CommandsArray[i + 1]);
+					FCommand CurrentCommand(CurrentOperator, CurrentParametr);
+					CurrentCommand.CommandType = ECommandType::Loop;
+					CurrentCommand.LoopIterationsNum = CurrentParametr;
+					CurrentCommand.LoopCommandsIterator = 0;
+					CurrentCommand.LoopIterator = 0;
+					i += 3;
+					FString CurrentLoopOperator = CommandsArray[i].ToLower();
+					while (CurrentLoopOperator != "end")
+					{
+						int32 CurrentLoopParametr = FCString::Atoi(*CommandsArray[i + 1]);
+						UE_LOG(ProgramInputLog, Error, TEXT("Loop command: %s  %i"), *CurrentLoopOperator, CurrentLoopParametr);
+						FCommand CurrentLoopCommand(CurrentLoopOperator, CurrentLoopParametr);
+						CurrentLoopCommand.CommandType = ECommandType::Movement;
+						CurrentCommand.LoopCommands.Add(CurrentLoopCommand);
+						i += 2;
+						CurrentLoopOperator = CommandsArray[i].ToLower();
+					}
+					if (CurrentLoopOperator == "end")
+					{
+						CurrentCommand.LoopIterator = 0;
+						CompiledProgram.Add(CurrentCommand);
+						i += 1;
+					}
+						
+				}
 			}
+		}
+		for (int32 i = 0; i < CompiledProgram.Num(); i++)
+		{
+			UE_LOG(ProgramInputLog, Error, TEXT("Command №%i  %s   %i"), i+1, *CompiledProgram[i].Operation, CompiledProgram[i].Parametr);
 		}
 		UE_LOG(ProgramInputLog, Error, TEXT("Program has been compiled"));
 		UE_LOG(ProgramInputLog, Error, TEXT("Number of Commands = %i"), CompiledProgram.Num());
-		//закомменчено, пока не создам класс Исполнитля
 		UPROPERTY()
 			AExecutor* Executor = FindExecutor();
 		if (GetWorld())

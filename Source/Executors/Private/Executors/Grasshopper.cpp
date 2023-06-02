@@ -90,71 +90,151 @@ void AGrasshopper::Tick(float DeltaTime)
 void AGrasshopper::Move()
 {
 	//IsMoving = true;
-	int32 Distance = CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetParametr();
-	if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetOperator() == TEXT("forward"))
+	if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].CommandType == ECommandType::Movement)
 	{
-		CurrentMovingData.Direction = 1;
-	}
-	else
-	{
-		CurrentMovingData.Direction = -1;
-	}
-	CurrentMovingData.CurrentStartPosition = GetActorLocation();
-	CurrentMovingData.CurrentEndPosition = 
-	FVector((CurrentMovingData.CurrentStartPosition.X+Distance*StepDistance*CurrentMovingData.Direction), 
-		CurrentMovingData.CurrentStartPosition.Y, CurrentMovingData.CurrentStartPosition.Z);
-
-	// Рассчитываем вершину параболы
-	float MidX = (CurrentMovingData.CurrentStartPosition.X + CurrentMovingData.CurrentEndPosition.X) / 2.f;
-	float MaxY = JumpHeight;
-	FVector VertexPos = FVector(MidX, MaxY, 0.f);
-
-	float y0 = VertexPos.Y;
-	float y1 = CurrentMovingData.CurrentStartPosition.Y;
-	float y2 = CurrentMovingData.CurrentEndPosition.Y;
-	float x0 = VertexPos.X;
-	float x1 = CurrentMovingData.CurrentStartPosition.X;
-	float x2 = CurrentMovingData.CurrentEndPosition.X;
-
-	CurrentMovingData.A = ((y2 - y1) * (x1 - x0) - (y1 - y0) * (x2 - x1)) / ((x1 - x0) * (x2 * x2 - x1 * x1) - (x2 - x1) * (x1 * x1 - x0 * x0));
-	CurrentMovingData.B = ((y1 - y0) - CurrentMovingData.A * (x1 * x1 - x0 * x0)) / (x1 - x0);
-	CurrentMovingData.C = y0 - CurrentMovingData.A * x0 * x0 - CurrentMovingData.B * x0;
-
-	UE_LOG(GrasshopperLog, Error, TEXT("A = %f   B = %f     C = %f"), CurrentMovingData.A, CurrentMovingData.B, CurrentMovingData.C);
-
-	FTimerHandle TimerHandle;
-	FTimerDelegate TimerDelegate;
-
-	CurrentMovingData.X = CurrentMovingData.CurrentStartPosition.X;
-	TimerDelegate.BindLambda([&]
-	{
-		if (CurrentMovingData.Direction>0 && CurrentMovingData.X > CurrentMovingData.CurrentEndPosition.X 
-			|| CurrentMovingData.Direction < 0 && CurrentMovingData.X < CurrentMovingData.CurrentEndPosition.X)
-		{ 
-			GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
-			CurrentMovingData.CurrentCommandIndex += 1;
-			//IsMoving = false;
-			if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num())
-				Move();
-			return; 
+		int32 Distance = CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetParametr();
+		if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetOperator() == TEXT("forward"))
+		{
+			CurrentMovingData.Direction = 1;
 		}
-		// Интерполируем значения по оси X и вычисляем соответствующие значения по оси Y
-		float Y = CurrentMovingData.A * FMath::Square(CurrentMovingData.X) + CurrentMovingData.B * CurrentMovingData.X + CurrentMovingData.C;
-		FVector NewPosition = FVector(CurrentMovingData.X, Y, CurrentMovingData.CurrentStartPosition.Z);
-		UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
-		CurrentMovingData.X += 1.f * CurrentMovingData.Direction;
-		// Обновляем позицию меша
-		SetActorLocation(NewPosition);
-	});
+		else
+		{
+			CurrentMovingData.Direction = -1;
+		}
+		CurrentMovingData.CurrentStartPosition = GetActorLocation();
+		CurrentMovingData.CurrentEndPosition =
+			FVector((CurrentMovingData.CurrentStartPosition.X + Distance * StepDistance * CurrentMovingData.Direction),
+				CurrentMovingData.CurrentStartPosition.Y, CurrentMovingData.CurrentStartPosition.Z);
+
+		// Рассчитываем вершину параболы
+		float MidX = (CurrentMovingData.CurrentStartPosition.X + CurrentMovingData.CurrentEndPosition.X) / 2.f;
+		float MaxY = JumpHeight;
+		FVector VertexPos = FVector(MidX, MaxY, 0.f);
+
+		float y0 = VertexPos.Y;
+		float y1 = CurrentMovingData.CurrentStartPosition.Y;
+		float y2 = CurrentMovingData.CurrentEndPosition.Y;
+		float x0 = VertexPos.X;
+		float x1 = CurrentMovingData.CurrentStartPosition.X;
+		float x2 = CurrentMovingData.CurrentEndPosition.X;
+
+		CurrentMovingData.A = ((y2 - y1) * (x1 - x0) - (y1 - y0) * (x2 - x1)) / ((x1 - x0) * (x2 * x2 - x1 * x1) - (x2 - x1) * (x1 * x1 - x0 * x0));
+		CurrentMovingData.B = ((y1 - y0) - CurrentMovingData.A * (x1 * x1 - x0 * x0)) / (x1 - x0);
+		CurrentMovingData.C = y0 - CurrentMovingData.A * x0 * x0 - CurrentMovingData.B * x0;
+
+		UE_LOG(GrasshopperLog, Error, TEXT("A = %f   B = %f     C = %f"), CurrentMovingData.A, CurrentMovingData.B, CurrentMovingData.C);
+
+		FTimerHandle TimerHandle;
+		FTimerDelegate TimerDelegate;
+
+		CurrentMovingData.X = CurrentMovingData.CurrentStartPosition.X;
+		TimerDelegate.BindLambda([&]
+			{
+				if (CurrentMovingData.Direction > 0 && CurrentMovingData.X > CurrentMovingData.CurrentEndPosition.X
+					|| CurrentMovingData.Direction < 0 && CurrentMovingData.X < CurrentMovingData.CurrentEndPosition.X)
+				{
+					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+					CurrentMovingData.CurrentCommandIndex += 1;
+					//IsMoving = false;
+					if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num())
+						Move();
+					return;
+				}
+				// Интерполируем значения по оси X и вычисляем соответствующие значения по оси Y
+				float Y = CurrentMovingData.A * FMath::Square(CurrentMovingData.X) + CurrentMovingData.B * CurrentMovingData.X + CurrentMovingData.C;
+				FVector NewPosition = FVector(CurrentMovingData.X, Y, CurrentMovingData.CurrentStartPosition.Z);
+				UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
+				CurrentMovingData.X += 1.f * CurrentMovingData.Direction;
+				// Обновляем позицию меша
+				SetActorLocation(NewPosition);
+			});
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.01f, true);
+	}
 	
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.01f, true);
-	
-	
+	else if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].CommandType == ECommandType::Loop)
+	{
+		FCommand CurrentLoopCommand = 
+		CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator];
+		UE_LOG(GrasshopperLog, Warning, TEXT("Loop command:  %s   %i"), *CurrentLoopCommand.GetOperator(), CurrentLoopCommand.GetParametr());
+		int32 Distance = CurrentLoopCommand.GetParametr();
+		if (CurrentLoopCommand.GetOperator() == TEXT("forward"))
+		{
+			CurrentMovingData.Direction = 1;
+		}
+		else
+		{
+			CurrentMovingData.Direction = -1;
+		}
+		CurrentMovingData.CurrentStartPosition = GetActorLocation();
+		CurrentMovingData.CurrentEndPosition =
+			FVector((CurrentMovingData.CurrentStartPosition.X + Distance * StepDistance * CurrentMovingData.Direction),
+				CurrentMovingData.CurrentStartPosition.Y, CurrentMovingData.CurrentStartPosition.Z);
+
+		// Рассчитываем вершину параболы
+		float MidX = (CurrentMovingData.CurrentStartPosition.X + CurrentMovingData.CurrentEndPosition.X) / 2.f;
+		float MaxY = JumpHeight;
+		FVector VertexPos = FVector(MidX, MaxY, 0.f);
+
+		float y0 = VertexPos.Y;
+		float y1 = CurrentMovingData.CurrentStartPosition.Y;
+		float y2 = CurrentMovingData.CurrentEndPosition.Y;
+		float x0 = VertexPos.X;
+		float x1 = CurrentMovingData.CurrentStartPosition.X;
+		float x2 = CurrentMovingData.CurrentEndPosition.X;
+
+		CurrentMovingData.A = ((y2 - y1) * (x1 - x0) - (y1 - y0) * (x2 - x1)) / ((x1 - x0) * (x2 * x2 - x1 * x1) - (x2 - x1) * (x1 * x1 - x0 * x0));
+		CurrentMovingData.B = ((y1 - y0) - CurrentMovingData.A * (x1 * x1 - x0 * x0)) / (x1 - x0);
+		CurrentMovingData.C = y0 - CurrentMovingData.A * x0 * x0 - CurrentMovingData.B * x0;
+
+		UE_LOG(GrasshopperLog, Error, TEXT("A = %f   B = %f     C = %f"), CurrentMovingData.A, CurrentMovingData.B, CurrentMovingData.C);
+
+		FTimerHandle TimerHandle;
+		FTimerDelegate TimerDelegate;
+
+		CurrentMovingData.X = CurrentMovingData.CurrentStartPosition.X;
+		TimerDelegate.BindLambda([&]
+			{
+				if (CurrentMovingData.Direction > 0 && CurrentMovingData.X > CurrentMovingData.CurrentEndPosition.X
+					|| CurrentMovingData.Direction < 0 && CurrentMovingData.X < CurrentMovingData.CurrentEndPosition.X)
+				{
+					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+					//переход на следующую команду цикла
+					CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator += 1;
+					//если дошёл до конца одной итерации цикла, то перехожу на следующую
+					if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator < CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands.Num())
+					{
+						Move();
+					}
+					else
+					{
+						CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopIterator += 1;
+						
+						if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopIterator < CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopIterationsNum)
+						{
+							CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator = 0;
+							Move();
+						}
+						else
+							return;
+					}
+				}
+				// Интерполируем значения по оси X и вычисляем соответствующие значения по оси Y
+				float Y = CurrentMovingData.A * FMath::Square(CurrentMovingData.X) + CurrentMovingData.B * CurrentMovingData.X + CurrentMovingData.C;
+				FVector NewPosition = FVector(CurrentMovingData.X, Y, CurrentMovingData.CurrentStartPosition.Z);
+				UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
+				CurrentMovingData.X += 1.f * CurrentMovingData.Direction;
+				// Обновляем позицию меша
+				SetActorLocation(NewPosition);
+			});
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.01f, true);
+	}	
 }
 
 void AGrasshopper::FillCorrectOperations()
 {
-	CorrectOperations.Add("repeat");
+	CorrectOperations.Add(TEXT("repeat"));
 	CorrectOperations.Add(TEXT("times"));
 	CorrectOperations.Add(TEXT("end"));
 	CorrectOperations.Add(TEXT("forward"));
