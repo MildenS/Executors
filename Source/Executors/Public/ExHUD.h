@@ -22,9 +22,17 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 		TSubclassOf<UUserWidget> ProgramInputWidgetClass;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+		TSubclassOf<UUserWidget> LevelCompleteWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+		TSubclassOf<UUserWidget> LevelFailedWidgetClass;
 
 private:
 	UUserWidget* ProgramInputWidget;
+	UUserWidget* LevelCompleteWidget;
+	UUserWidget* LevelFailedWidget;
 	UFUNCTION()
 	void OnGameStatusChanged(EExGameStatus GameStatus);
 };

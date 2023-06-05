@@ -23,6 +23,25 @@ void AExHUD::BeginPlay()
 	else 
 		UE_LOG(LogHUD, Error, TEXT("ProgramInputWidget didn't create!!!!!"));
 	
+	LevelCompleteWidget = CreateWidget<UUserWidget>(GetWorld(), LevelCompleteWidgetClass);
+	if (LevelCompleteWidget)
+	{
+		LevelCompleteWidget->AddToViewport();
+		LevelCompleteWidget->SetVisibility(ESlateVisibility::Hidden);
+		UE_LOG(LogHUD, Error, TEXT("LevelCompleteWidget create!!!!!"));
+	}
+	else
+		UE_LOG(LogHUD, Error, TEXT("LevelCompleteWidget didn't create!!!!!"));
+
+	LevelFailedWidget = CreateWidget<UUserWidget>(GetWorld(), LevelFailedWidgetClass);
+	if (LevelFailedWidget)
+	{
+		LevelFailedWidget->AddToViewport();
+		LevelFailedWidget->SetVisibility(ESlateVisibility::Hidden);
+		UE_LOG(LogHUD, Error, TEXT("LevelFailedWidget create!!!!!"));
+	}
+	else
+		UE_LOG(LogHUD, Error, TEXT("LevelFailedWidget didn't create!!!!!"));
 
 	if (GetWorld())
 	{
@@ -42,6 +61,20 @@ void AExHUD::OnGameStatusChanged(EExGameStatus GameStatus)
 		if (ProgramInputWidget)
 			ProgramInputWidget->SetVisibility(ESlateVisibility::Visible);
 	}
-	else
+	else if (GameStatus == EExGameStatus::LevelComplete)
+	{
 		ProgramInputWidget->SetVisibility(ESlateVisibility::Hidden);
+		if (LevelCompleteWidget)
+			LevelCompleteWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+	else if (GameStatus == EExGameStatus::LevelFailed)
+	{
+		ProgramInputWidget->SetVisibility(ESlateVisibility::Hidden);
+		if (LevelFailedWidget)
+			LevelFailedWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		ProgramInputWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
 }

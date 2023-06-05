@@ -20,6 +20,7 @@ struct FCommand
 {
 	GENERATED_USTRUCT_BODY();
 
+
 	UPROPERTY()
 		FString Operation;
 	UPROPERTY()
@@ -66,6 +67,10 @@ struct FMovingData
 {
 	
 	GENERATED_USTRUCT_BODY();
+
+	FTimerHandle TimerHandle;
+	FTimerDelegate TimerDelegate;
+
 
 	//Начальная и конечная позиции параболического движения (прыжка Кузнечика)
 	FVector CurrentStartPosition;

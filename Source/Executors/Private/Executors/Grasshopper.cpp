@@ -7,6 +7,7 @@
 #include "Components/StaticMeshComponent.h"
 #include"ExGameModeBase.h"
 #include "ExCoreTypes.h"
+#include "TimerManager.h"
 
 DEFINE_LOG_CATEGORY_STATIC(GrasshopperLog, All, All);
 
@@ -24,6 +25,8 @@ AGrasshopper::AGrasshopper()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(RootComponent);
+
+	timerCounter = 0;
 
 	FillCorrectOperations();
 
@@ -128,27 +131,29 @@ void AGrasshopper::Move()
 
 		UE_LOG(GrasshopperLog, Error, TEXT("A = %f   B = %f     C = %f"), CurrentMovingData.A, CurrentMovingData.B, CurrentMovingData.C);
 
-		FTimerHandle TimerHandle;
-		FTimerDelegate TimerDelegate;
 
 		CurrentMovingData.X = CurrentMovingData.CurrentStartPosition.X;
-		TimerDelegate.BindLambda([&]
+		CurrentMovingData.TimerDelegate.BindLambda([&]
 			{
 				if (CurrentMovingData.Direction > 0 && CurrentMovingData.X > CurrentMovingData.CurrentEndPosition.X
 					|| CurrentMovingData.Direction < 0 && CurrentMovingData.X < CurrentMovingData.CurrentEndPosition.X)
 				{
-					if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num())
+					if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num() 
+						&& !CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].IsCounted)
 					{
 						CurrentExecutorPosition += CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetParametr();
-						UE_LOG(GrasshopperLog, Warning, TEXT("Grasshopper position: %i"), CurrentExecutorPosition);
+						//UE_LOG(GrasshopperLog, Warning, TEXT("Grasshopper position: %i"), CurrentExecutorPosition);
 						CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].IsCounted = true;
-					}					
-					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+					}
+					//UE_LOG(GrasshopperLog, Warning, TEXT("Timer Clear"));
+					GetWorld()->GetTimerManager().ClearTimer(CurrentMovingData.TimerHandle);
+					//UE_LOG(GrasshopperLog, Warning, TEXT("Timer % clear "), CurrentMovingData.CurrentCommandIndex);
+					
 					CurrentMovingData.CurrentCommandIndex += 1;
 					//IsMoving = false;
 					if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num())
 						Move();
-					if (CurrentMovingData.CurrentCommandIndex >= CurrentMovingData.CurrentComandsArray.Num())
+					else if (CurrentMovingData.CurrentCommandIndex >= CurrentMovingData.CurrentComandsArray.Num())
 					{
 						if (GetWorld())
 						{
@@ -157,19 +162,21 @@ void AGrasshopper::Move()
 							GameMode->SetCurrentExecutorPosition(CurrentExecutorPosition);
 							GameMode->SetGameStatus(EExGameStatus::EndOfLevel);	
 						}
+						return;
 					}
-					return;
 				}
 				// Интерполируем значения по оси X и вычисляем соответствующие значения по оси Y
 				float Y = CurrentMovingData.A * FMath::Square(CurrentMovingData.X) + CurrentMovingData.B * CurrentMovingData.X + CurrentMovingData.C;
 				FVector NewPosition = FVector(CurrentMovingData.X, Y, CurrentMovingData.CurrentStartPosition.Z);
-				UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
+				//UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
 				CurrentMovingData.X += 1.f * CurrentMovingData.Direction;
 				// Обновляем позицию меша
 				SetActorLocation(NewPosition);
 			});
 
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.01f, true);
+		GetWorld()->GetTimerManager().SetTimer(CurrentMovingData.TimerHandle, CurrentMovingData.TimerDelegate, 0.01f, true);
+		timerCounter++;
+		//UE_LOG(GrasshopperLog, Warning, TEXT("Timer % Start "), CurrentMovingData.CurrentCommandIndex);
 	}
 	
 	else if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].CommandType == ECommandType::Loop)
@@ -210,11 +217,8 @@ void AGrasshopper::Move()
 
 		//UE_LOG(GrasshopperLog, Error, TEXT("A = %f   B = %f     C = %f"), CurrentMovingData.A, CurrentMovingData.B, CurrentMovingData.C);
 
-		FTimerHandle TimerHandle;
-		FTimerDelegate TimerDelegate;
-
 		CurrentMovingData.X = CurrentMovingData.CurrentStartPosition.X;
-		TimerDelegate.BindLambda([&]
+		CurrentMovingData.TimerDelegate.BindLambda([&]
 			{
 				if (CurrentMovingData.Direction > 0 && CurrentMovingData.X > CurrentMovingData.CurrentEndPosition.X
 					|| CurrentMovingData.Direction < 0 && CurrentMovingData.X < CurrentMovingData.CurrentEndPosition.X)
@@ -226,18 +230,8 @@ void AGrasshopper::Move()
 						CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator].IsCounted = true;
 						CurrentExecutorPosition += CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator].GetParametr();
 					}
-					if (CurrentMovingData.CurrentCommandIndex >= CurrentMovingData.CurrentComandsArray.Num())
-					{
-						if (GetWorld())
-						{
-							auto GameMode = Cast<AExGameModeBase>(GetWorld()->GetAuthGameMode());
-							GameMode->SetCurrentExecutorPosition(CurrentExecutorPosition);
-							GameMode->SetGameStatus(EExGameStatus::EndOfLevel);
-						}
-						return;
-					}
 					
-					GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+					GetWorld()->GetTimerManager().ClearTimer(CurrentMovingData.TimerHandle);
 					//переход на следующую команду цикла
 
 					CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator += 1;
@@ -258,9 +252,20 @@ void AGrasshopper::Move()
 						else
 						{
 							CurrentMovingData.CurrentCommandIndex += 1;
-							if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num())
-								Move();				
-							return;
+							if (CurrentMovingData.CurrentCommandIndex >= CurrentMovingData.CurrentComandsArray.Num())
+							{
+								//UE_LOG(GrasshopperLog, Error, TEXT("All grasshopper timers has been cleaned 1111"));
+								if (GetWorld())
+								{
+									auto GameMode = Cast<AExGameModeBase>(GetWorld()->GetAuthGameMode());
+									GameMode->SetCurrentExecutorPosition(CurrentExecutorPosition);
+									GameMode->SetGameStatus(EExGameStatus::EndOfLevel);
+									//GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+								}
+								return;
+							}
+							else if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num())
+								Move();	
 						}
 							
 					}
@@ -274,7 +279,8 @@ void AGrasshopper::Move()
 				SetActorLocation(NewPosition);
 			});
 
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.01f, true);
+		GetWorld()->GetTimerManager().SetTimer(CurrentMovingData.TimerHandle, CurrentMovingData.TimerDelegate, 0.01f, true);
+		//UE_LOG(GrasshopperLog, Warning, TEXT("TimerStart"));
 	}	
 }
 

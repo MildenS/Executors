@@ -4,6 +4,7 @@
 #include "ExGameModeBase.h"
 #include "ExHUD.h"
 #include "ExCoreTypes.h"
+#include"Executors/Executor.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(ExGameModeLog, All, All);
@@ -47,7 +48,23 @@ void AExGameModeBase::SetGameStatus(EExGameStatus GameStatus)
 	if (GameStatus == CurrentGameStatus)
 		return;
 	if (GameStatus == EExGameStatus::EndOfLevel)
+	{
+		//AExecutor* Executor = nullptr;
+		//for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
+		//{
+		//	UPROPERTY()
+		//		APawn* Pawn = It->Get();
+		//	if (Pawn->IsPlayerControlled())
+		//	{
+		//		Executor = Cast<AExecutor>(Pawn);
+		//		//UE_LOG(ProgramInputLog, Error, TEXT("Executor has been finded"));
+		//		break;
+		//	}
+		//}
+		//GetWorld()->GetTimerManager().ClearAllTimersForObject(Executor);
 		CheckCompleteLevel();
+	}
+		
 	CurrentGameStatus = GameStatus;
 	OnGameStatusChanged.Broadcast(CurrentGameStatus);
 }

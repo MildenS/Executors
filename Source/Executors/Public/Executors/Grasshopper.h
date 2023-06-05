@@ -55,7 +55,9 @@ public:
 
 private:
 
-	
+
+	//для отладки таймеров (на работу игры не влияет)
+	int32 timerCounter;
 
 	UPROPERTY()
 	TSet<FString> CorrectOperations;

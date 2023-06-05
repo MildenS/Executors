@@ -24,10 +24,20 @@ void AExPlayerController::OnGameStatusChanged(EExGameStatus Status)
         SetInputMode(FInputModeUIOnly());
         bShowMouseCursor = true;
     }
+    else if (Status == EExGameStatus::LevelComplete)
+    {
+        SetInputMode(FInputModeUIOnly());
+        bShowMouseCursor = true;
+    }
+    else if (Status == EExGameStatus::LevelFailed)
+    {
+        SetInputMode(FInputModeUIOnly());
+        bShowMouseCursor = true;
+    }
     else
     {
-        SetInputMode(FInputModeGameOnly());
-        bShowMouseCursor = false;
+        SetInputMode(FInputModeUIOnly());
+        bShowMouseCursor = true;
     }
 }
 
