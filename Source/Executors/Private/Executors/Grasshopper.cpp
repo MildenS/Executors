@@ -32,6 +32,8 @@ AGrasshopper::AGrasshopper()
 void AGrasshopper::ExecuteProgram(const TArray<FCommand>& CompiledProgram)
 {
 	Super::ExecuteProgram(CompiledProgram);
+	if (CompiledProgram.Num() == 0)
+		return;
 	for (int32 i = 0; i < CurrentMovingData.CurrentComandsArray.Num(); i++)
 	{
 		CurrentMovingData.CurrentComandsArray.RemoveAt(i);

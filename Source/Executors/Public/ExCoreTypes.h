@@ -34,6 +34,12 @@ struct FCommand
 	FCommand(FString _op, int32 _param) : Operation(_op), Parametr(_param) {}
 	FCommand() {}
 
+
+	bool operator == (const FCommand other) const
+	{
+		return (this->Operation == other.Operation) && (this->Parametr == other.Parametr);
+	}
+
 	FString& GetOperator()  { return Operation; }
 	int32 GetParametr()  { return Parametr; }
 };

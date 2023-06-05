@@ -7,6 +7,8 @@
 #include "ExCoreTypes.h"
 #include "ExGameModeBase.generated.h"
 
+struct FCommand;
+
 /**
  * 
  */
@@ -23,6 +25,7 @@ public:
 	void SetGameStatus(EExGameStatus GameStatus);
 	int32 GetStartPosition() { return StartPosition; }
 	void SetCurrentExecutorPosition(int32 pos) { CurrentExecutorPosition = pos; }
+	TArray<FCommand>& GetAllowedCommands();
 
 private:
 	EExGameStatus CurrentGameStatus = EExGameStatus::GameInProgress;
@@ -32,4 +35,8 @@ private:
 	UPROPERTY(EditAnywhere)
 		int32 StartPosition = 0;
 	int32 CurrentExecutorPosition; //Позиция, на которой остановился Исполнитель (в системе координат Исполнителя)
+	UPROPERTY(EditAnywhere, Category = "Allowed commands")
+		TArray<FString> AllowedCommandsStrings; //Команды, которые разрешены на текущем уровне
+	TArray<FCommand> AllowedCommands;
+
 };

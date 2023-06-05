@@ -9,6 +9,7 @@
 class AExecutor;
 class UButton;
 class UMultiLineEditableText;
+class AExGameModeBase;
 struct FCommand;
 
 
@@ -36,4 +37,6 @@ private:
 	//UPROPERTY()
 	//TArray<FCommand> CompiledProgram;
 	AExecutor* FindExecutor();
+	AExGameModeBase* GetGameMode();
+	void LogAllowedCommands(TArray<FCommand>& AllowedCommands);
 };

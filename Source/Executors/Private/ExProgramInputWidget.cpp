@@ -23,6 +23,10 @@ void UExProgramInputWidget::NativeConstruct()
 void UExProgramInputWidget::CompileProgram()
 {
 	UE_LOG(ProgramInputLog, Error, TEXT("Starting compile program"));
+	auto CurrentGameMode = GetGameMode();
+	if (!CurrentGameMode)
+		return;
+	TArray<FCommand> AllowedCommands = CurrentGameMode->GetAllowedCommands();
 	TArray<FCommand> CompiledProgram;
 	FString Program = ProgramInputField->GetText().ToString();
 	TArray<FString> CommandsArray;
@@ -42,7 +46,8 @@ void UExProgramInputWidget::CompileProgram()
 					int32 CurrentParametr = FCString::Atoi(*CommandsArray[i + 1]);
 					FCommand CurrentCommand(CurrentOperator, CurrentParametr);
 					CurrentCommand.CommandType = ECommandType::Movement;
-					CompiledProgram.Add(CurrentCommand);
+					if(AllowedCommands.Contains(CurrentCommand))
+						CompiledProgram.Add(CurrentCommand);
 					i += 2;
 				}
 				else if (CurrentOperator == "repeat")
@@ -61,7 +66,8 @@ void UExProgramInputWidget::CompileProgram()
 						UE_LOG(ProgramInputLog, Error, TEXT("Loop command: %s  %i"), *CurrentLoopOperator, CurrentLoopParametr);
 						FCommand CurrentLoopCommand(CurrentLoopOperator, CurrentLoopParametr);
 						CurrentLoopCommand.CommandType = ECommandType::Movement;
-						CurrentCommand.LoopCommands.Add(CurrentLoopCommand);
+						if(AllowedCommands.Contains(CurrentLoopCommand))
+							CurrentCommand.LoopCommands.Add(CurrentLoopCommand);
 						i += 2;
 						CurrentLoopOperator = CommandsArray[i].ToLower();
 					}
@@ -115,4 +121,27 @@ AExecutor* UExProgramInputWidget::FindExecutor()
 		}
 	}
 	return Executor;
+}
+
+
+AExGameModeBase* UExProgramInputWidget::GetGameMode()
+{
+	if (GetWorld())
+	{
+		auto GameMode = Cast<AExGameModeBase>(GetWorld()->GetAuthGameMode());
+		return GameMode;
+	}
+	return nullptr;
+}
+
+
+void UExProgramInputWidget::LogAllowedCommands(TArray<FCommand>& AllowedCommands)
+{
+	if (AllowedCommands.Num() == 0)
+	{
+		UE_LOG(ProgramInputLog, Error, TEXT("There is no allowed commands!!!"));
+		return;
+	}
+	for (FCommand Command : AllowedCommands)
+		UE_LOG(ProgramInputLog, Warning, TEXT("Allowed command: %s   %i"), *Command.GetOperator(), Command.GetParametr());
 }
