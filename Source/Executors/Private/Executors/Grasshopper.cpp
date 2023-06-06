@@ -26,7 +26,6 @@ AGrasshopper::AGrasshopper()
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(RootComponent);
 
-	timerCounter = 0;
 
 	FillCorrectOperations();
 
@@ -55,6 +54,7 @@ void AGrasshopper::ExecuteProgram(const TArray<FCommand>& CompiledProgram)
 void AGrasshopper::BeginPlay()
 {
 	Super::BeginPlay();
+	CurrentMovingData.TimerRate = 0.004f;
 }
 
 void AGrasshopper::Tick(float DeltaTime)
@@ -102,11 +102,11 @@ void AGrasshopper::Move()
 		int32 Distance = CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetParametr();
 		if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetOperator() == TEXT("forward"))
 		{
-			CurrentMovingData.Direction = 1;
+			CurrentMovingData.Direction = -1;
 		}
 		else
 		{
-			CurrentMovingData.Direction = -1;
+			CurrentMovingData.Direction = 1;
 		}
 		CurrentMovingData.CurrentStartPosition = GetActorLocation();
 		CurrentMovingData.CurrentEndPosition =
@@ -168,13 +168,14 @@ void AGrasshopper::Move()
 				// Интерполируем значения по оси X и вычисляем соответствующие значения по оси Y
 				float Y = CurrentMovingData.A * FMath::Square(CurrentMovingData.X) + CurrentMovingData.B * CurrentMovingData.X + CurrentMovingData.C;
 				FVector NewPosition = FVector(CurrentMovingData.X, Y, CurrentMovingData.CurrentStartPosition.Z);
-				//UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
+				UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
 				CurrentMovingData.X += 1.f * CurrentMovingData.Direction;
 				// Обновляем позицию меша
 				SetActorLocation(NewPosition);
 			});
 
-		GetWorld()->GetTimerManager().SetTimer(CurrentMovingData.TimerHandle, CurrentMovingData.TimerDelegate, 0.01f, true);
+		GetWorld()->GetTimerManager().SetTimer(CurrentMovingData.TimerHandle, CurrentMovingData.TimerDelegate, 
+			CurrentMovingData.TimerRate, true);
 		timerCounter++;
 		//UE_LOG(GrasshopperLog, Warning, TEXT("Timer % Start "), CurrentMovingData.CurrentCommandIndex);
 	}
@@ -188,11 +189,11 @@ void AGrasshopper::Move()
 		int32 Distance = CurrentLoopCommand.GetParametr();
 		if (CurrentLoopCommand.GetOperator() == TEXT("forward"))
 		{
-			CurrentMovingData.Direction = 1;
+			CurrentMovingData.Direction = -1;
 		}
 		else
 		{
-			CurrentMovingData.Direction = -1;
+			CurrentMovingData.Direction = 1;
 		}
 		CurrentMovingData.CurrentStartPosition = GetActorLocation();
 		CurrentMovingData.CurrentEndPosition =
@@ -215,7 +216,7 @@ void AGrasshopper::Move()
 		CurrentMovingData.B = ((y1 - y0) - CurrentMovingData.A * (x1 * x1 - x0 * x0)) / (x1 - x0);
 		CurrentMovingData.C = y0 - CurrentMovingData.A * x0 * x0 - CurrentMovingData.B * x0;
 
-		//UE_LOG(GrasshopperLog, Error, TEXT("A = %f   B = %f     C = %f"), CurrentMovingData.A, CurrentMovingData.B, CurrentMovingData.C);
+		UE_LOG(GrasshopperLog, Error, TEXT("A = %f   B = %f     C = %f"), CurrentMovingData.A, CurrentMovingData.B, CurrentMovingData.C);
 
 		CurrentMovingData.X = CurrentMovingData.CurrentStartPosition.X;
 		CurrentMovingData.TimerDelegate.BindLambda([&]
@@ -273,13 +274,14 @@ void AGrasshopper::Move()
 				// Интерполируем значения по оси X и вычисляем соответствующие значения по оси Y
 				float Y = CurrentMovingData.A * FMath::Square(CurrentMovingData.X) + CurrentMovingData.B * CurrentMovingData.X + CurrentMovingData.C;
 				FVector NewPosition = FVector(CurrentMovingData.X, Y, CurrentMovingData.CurrentStartPosition.Z);
-				//UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
+				UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
 				CurrentMovingData.X += 1.f * CurrentMovingData.Direction;
 				// Обновляем позицию меша
 				SetActorLocation(NewPosition);
 			});
 
-		GetWorld()->GetTimerManager().SetTimer(CurrentMovingData.TimerHandle, CurrentMovingData.TimerDelegate, 0.01f, true);
+		GetWorld()->GetTimerManager().SetTimer(CurrentMovingData.TimerHandle, CurrentMovingData.TimerDelegate, 
+			CurrentMovingData.TimerRate, true);
 		//UE_LOG(GrasshopperLog, Warning, TEXT("TimerStart"));
 	}	
 }

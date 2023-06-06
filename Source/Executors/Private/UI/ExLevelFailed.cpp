@@ -22,26 +22,10 @@ void UExLevelFailed::GoToMainMenu()
 
 void UExLevelFailed::RetryLevel()
 {
-	//AExecutor* Executor = nullptr;
-	//for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
-	//{
-	//	UPROPERTY()
-	//		APawn* Pawn = It->Get();
-	//	if (Pawn->IsPlayerControlled())
-	//	{
-	//		Executor = Cast<AExecutor>(Pawn);
-	//		//UE_LOG(ProgramInputLog, Error, TEXT("Executor has been finded"));
-	//		break;
-	//	}
-	//}
-	//GetWorld()->GetTimerManager().ClearAllTimersForObject(Executor);
-
 	if (GetWorld())
 	{
 		FString LevelNameString = GetWorld()->GetName();
 		FName LevelName = FName(*LevelNameString);
 		UGameplayStatics::OpenLevel(this, LevelName, false);
 	}
-
-	
 }

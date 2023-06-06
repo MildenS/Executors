@@ -70,7 +70,7 @@ struct FMovingData
 
 	FTimerHandle TimerHandle;
 	FTimerDelegate TimerDelegate;
-
+	float TimerRate;
 
 	//Начальная и конечная позиции параболического движения (прыжка Кузнечика)
 	FVector CurrentStartPosition;

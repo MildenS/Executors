@@ -3,8 +3,10 @@
 
 #include "ExGameModeBase.h"
 #include "ExHUD.h"
+#include"ExPlayerController.h"
 #include "ExCoreTypes.h"
 #include"Executors/Executor.h"
+#include"Executors/Grasshopper.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(ExGameModeLog, All, All);
@@ -13,6 +15,8 @@ DEFINE_LOG_CATEGORY_STATIC(ExGameModeLog, All, All);
 AExGameModeBase::AExGameModeBase()
 {
 	HUDClass = AExHUD::StaticClass();
+	PlayerControllerClass = AExPlayerController::StaticClass();
+	DefaultPawnClass = AGrasshopper::StaticClass();
 }
 
 void AExGameModeBase::StartPlay()

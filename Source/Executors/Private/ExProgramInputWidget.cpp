@@ -69,6 +69,7 @@ void UExProgramInputWidget::CompileProgram()
 						if(AllowedCommands.Contains(CurrentLoopCommand))
 							CurrentCommand.LoopCommands.Add(CurrentLoopCommand);
 						i += 2;
+						if (i<CommandsArray.Num())
 						CurrentLoopOperator = CommandsArray[i].ToLower();
 					}
 					if (CurrentLoopOperator == "end")
