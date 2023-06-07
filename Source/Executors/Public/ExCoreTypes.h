@@ -49,7 +49,7 @@ struct FCommand
 UENUM()
 enum class EExGameStatus : uint8
 {
-	GameInProgress = 0,
+	GameInProgress = 1,
 	ProgramInput,
 	Compile,
 	EndOfLevel,

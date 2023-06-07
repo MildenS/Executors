@@ -20,6 +20,8 @@ class EXECUTORS_API UExMenuMainWidget : public UUserWidget
 protected:
 
 	UPROPERTY(meta = (BindWidget))
+	UButton* QuitGameButton;
+	UPROPERTY(meta = (BindWidget))
 	UButton* FirstLevelButton;
 	UPROPERTY(meta = (BindWidget))
 	UButton* SecondLevelButton;
@@ -39,6 +41,9 @@ private:
 
 	UFUNCTION()
 	void OnThirdLevelButtonPressed();
+
+	UFUNCTION()
+	void OnQuitGameButtonPressed();
 
 
 };

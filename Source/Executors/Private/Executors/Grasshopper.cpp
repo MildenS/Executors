@@ -141,7 +141,9 @@ void AGrasshopper::Move()
 					if (CurrentMovingData.CurrentCommandIndex < CurrentMovingData.CurrentComandsArray.Num() 
 						&& !CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].IsCounted)
 					{
-						CurrentExecutorPosition += CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetParametr();
+						//умножаем на -1, потому что направление инвертировано (особенности системы координат движка)
+						CurrentExecutorPosition += 
+						CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].GetParametr()*CurrentMovingData.Direction*(-1);
 						//UE_LOG(GrasshopperLog, Warning, TEXT("Grasshopper position: %i"), CurrentExecutorPosition);
 						CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].IsCounted = true;
 					}
@@ -182,6 +184,14 @@ void AGrasshopper::Move()
 	
 	else if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].CommandType == ECommandType::Loop)
 	{
+		if (CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands.Num() == 0)
+		{
+			//решение проблемы с пустым циклом
+			CurrentMovingData.CurrentCommandIndex += 1;
+			if (CurrentMovingData.CurrentCommandIndex >= CurrentMovingData.CurrentComandsArray.Num())
+				return;
+			Move();
+		}
 		FCommand CurrentLoopCommand = 
 		CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator];
 		CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator].IsCounted=false;
@@ -229,7 +239,8 @@ void AGrasshopper::Move()
 						&& CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopIterator < CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopIterationsNum)
 					{
 						CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator].IsCounted = true;
-						CurrentExecutorPosition += CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator].GetParametr();
+						CurrentExecutorPosition += 
+							CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommands[CurrentMovingData.CurrentComandsArray[CurrentMovingData.CurrentCommandIndex].LoopCommandsIterator].GetParametr() * CurrentMovingData.Direction * (-1);
 					}
 					
 					GetWorld()->GetTimerManager().ClearTimer(CurrentMovingData.TimerHandle);
@@ -277,7 +288,12 @@ void AGrasshopper::Move()
 				UE_LOG(GrasshopperLog, Warning, TEXT("NewPosition.X = %f     NewPosition.Y = %f"), NewPosition.X, NewPosition.Y);
 				CurrentMovingData.X += 1.f * CurrentMovingData.Direction;
 				// Обновляем позицию меша
-				SetActorLocation(NewPosition);
+				if(this)
+					SetActorLocation(NewPosition);
+				else
+				{
+					UE_LOG(GrasshopperLog, Error, TEXT("Grasshopper deleted!"));
+				}
 			});
 
 		GetWorld()->GetTimerManager().SetTimer(CurrentMovingData.TimerHandle, CurrentMovingData.TimerDelegate, 

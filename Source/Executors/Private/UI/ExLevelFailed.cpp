@@ -5,6 +5,7 @@
 #include"Components/Button.h"
 #include "Kismet/GameplayStatics.h"
 #include "Executors/Executor.h"
+#include"ExGameInstance.h"
 
 
 void UExLevelFailed::NativeConstruct()
@@ -17,7 +18,12 @@ void UExLevelFailed::NativeConstruct()
 
 void UExLevelFailed::GoToMainMenu()
 {
-
+	if (GetWorld())
+	{
+		auto GameInstance = GetWorld()->GetGameInstance<UExGameInstance>();
+		FName MenuLevelName = GameInstance->GetMenuLevelName();
+		UGameplayStatics::OpenLevel(this, MenuLevelName, false);
+	}
 }
 
 void UExLevelFailed::RetryLevel()

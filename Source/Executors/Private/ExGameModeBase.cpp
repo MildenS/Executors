@@ -22,7 +22,6 @@ AExGameModeBase::AExGameModeBase()
 void AExGameModeBase::StartPlay()
 {
 	Super::StartPlay();
-	CurrentGameStatus =EExGameStatus::GameInProgress;
 	
 	
 	//Обрабатываем разрешённые команды
@@ -44,28 +43,22 @@ void AExGameModeBase::StartPlay()
 			}
 		}
 	}
+
+	UE_LOG(ExGameModeLog, Error, TEXT("Level started"));
+	SetGameStatus(EExGameStatus::GameInProgress);
 }
 
 
 void AExGameModeBase::SetGameStatus(EExGameStatus GameStatus)
 {
 	if (GameStatus == CurrentGameStatus)
+	{
+		UE_LOG(ExGameModeLog, Error, TEXT("New Game status equal current game status"));
 		return;
+	}
+	
 	if (GameStatus == EExGameStatus::EndOfLevel)
 	{
-		//AExecutor* Executor = nullptr;
-		//for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; ++It)
-		//{
-		//	UPROPERTY()
-		//		APawn* Pawn = It->Get();
-		//	if (Pawn->IsPlayerControlled())
-		//	{
-		//		Executor = Cast<AExecutor>(Pawn);
-		//		//UE_LOG(ProgramInputLog, Error, TEXT("Executor has been finded"));
-		//		break;
-		//	}
-		//}
-		//GetWorld()->GetTimerManager().ClearAllTimersForObject(Executor);
 		CheckCompleteLevel();
 	}
 		
@@ -78,15 +71,14 @@ void AExGameModeBase::CheckCompleteLevel()
 {
 	if (CurrentExecutorPosition == EndPosition)
 	{
-		CurrentGameStatus = EExGameStatus::LevelComplete;
+		SetGameStatus(EExGameStatus::LevelComplete);
 		UE_LOG(ExGameModeLog, Warning, TEXT("LEVEL COMPLETE!!!!, Executor position: %i"), CurrentExecutorPosition);
 	}	
 	else
 	{
-		CurrentGameStatus = EExGameStatus::LevelFailed;
+		SetGameStatus(EExGameStatus::LevelFailed);
 		UE_LOG(ExGameModeLog, Warning, TEXT("LEVEL FAILED :(((((((((, Executor position: %i"), CurrentExecutorPosition);
 	}
-	OnGameStatusChanged.Broadcast(CurrentGameStatus);
 }
 
 

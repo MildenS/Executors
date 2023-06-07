@@ -3,6 +3,8 @@
 
 #include "UI/ExLevelCompleteWidget.h"
 #include "Components/Button.h"
+#include"ExGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 void UExLevelCompleteWidget::NativeConstruct()
 {
@@ -16,5 +18,10 @@ void UExLevelCompleteWidget::NativeConstruct()
 
 void UExLevelCompleteWidget::GoToMainMenu()
 {
-
+	if (GetWorld())
+	{
+		auto GameInstance = GetWorld()->GetGameInstance<UExGameInstance>();
+		FName MenuLevelName = GameInstance->GetMenuLevelName();
+		UGameplayStatics::OpenLevel(this, MenuLevelName, false);
+	}
 }

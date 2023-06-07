@@ -4,6 +4,8 @@
 #include "ExPlayerController.h"
 #include "ExGameModeBase.h"
 
+DEFINE_LOG_CATEGORY_STATIC(ExPlayerControllerLog, All, All);
+
 void AExPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -19,24 +21,16 @@ void AExPlayerController::BeginPlay()
 
 void AExPlayerController::OnGameStatusChanged(EExGameStatus Status)
 {
-    if (Status == EExGameStatus::ProgramInput)
+    if (Status == EExGameStatus::GameInProgress)
     {
-        SetInputMode(FInputModeUIOnly());
-        bShowMouseCursor = true;
-    }
-    else if (Status == EExGameStatus::LevelComplete)
-    {
-        SetInputMode(FInputModeUIOnly());
-        bShowMouseCursor = true;
-    }
-    else if (Status == EExGameStatus::LevelFailed)
-    {
-        SetInputMode(FInputModeUIOnly());
-        bShowMouseCursor = true;
+        SetInputMode(FInputModeGameOnly());
+        UE_LOG(ExPlayerControllerLog, Warning, TEXT("Input mode = GameOnly"));
+        bShowMouseCursor = false;
     }
     else
     {
         SetInputMode(FInputModeUIOnly());
+        UE_LOG(ExPlayerControllerLog, Warning, TEXT("Input mode = UIOnly"));
         bShowMouseCursor = true;
     }
 }

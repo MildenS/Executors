@@ -29,6 +29,8 @@ void UExProgramInputWidget::CompileProgram()
 	TArray<FCommand> AllowedCommands = CurrentGameMode->GetAllowedCommands();
 	TArray<FCommand> CompiledProgram;
 	FString Program = ProgramInputField->GetText().ToString();
+	if (Program.IsEmpty())
+		return;
 	TArray<FString> CommandsArray;
 	const TCHAR* DelimsArray[] = { TEXT(" "), TEXT(","), TEXT("\n"), TEXT("\r"), TEXT("\b"), TEXT("\t") };
 	if (!Program.IsEmpty())
@@ -62,6 +64,12 @@ void UExProgramInputWidget::CompileProgram()
 					FString CurrentLoopOperator = CommandsArray[i].ToLower();
 					while (CurrentLoopOperator != "end")
 					{
+						if (i >= CommandsArray.Num()-1)
+						{
+							UE_LOG(ProgramInputLog, Error, TEXT("ProgramInputError catched!!!"));
+							return;
+						}
+							
 						int32 CurrentLoopParametr = FCString::Atoi(*CommandsArray[i + 1]);
 						UE_LOG(ProgramInputLog, Error, TEXT("Loop command: %s  %i"), *CurrentLoopOperator, CurrentLoopParametr);
 						FCommand CurrentLoopCommand(CurrentLoopOperator, CurrentLoopParametr);
@@ -69,8 +77,13 @@ void UExProgramInputWidget::CompileProgram()
 						if(AllowedCommands.Contains(CurrentLoopCommand))
 							CurrentCommand.LoopCommands.Add(CurrentLoopCommand);
 						i += 2;
-						if (i<CommandsArray.Num())
-						CurrentLoopOperator = CommandsArray[i].ToLower();
+						if (i < CommandsArray.Num())
+							CurrentLoopOperator = CommandsArray[i].ToLower();
+						else
+						{
+							UE_LOG(ProgramInputLog, Error, TEXT("ProgramInputError catched!!!"));
+							return;
+						}
 					}
 					if (CurrentLoopOperator == "end")
 					{

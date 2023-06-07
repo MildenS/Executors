@@ -28,7 +28,7 @@ public:
 	TArray<FCommand>& GetAllowedCommands();
 
 private:
-	EExGameStatus CurrentGameStatus = EExGameStatus::GameInProgress;
+	EExGameStatus CurrentGameStatus;
 	void CheckCompleteLevel();
 	UPROPERTY(EditAnywhere)
 		int32 EndPosition=10;
